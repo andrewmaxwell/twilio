@@ -5,37 +5,79 @@ const canvasHeight = 250;
 const gap = 2;
 const bottomMargin = gap * 2;
 const borderWidth = 0.5;
-
+const lineColor = '#AAA';
 
 const bars = [{
 	key: 'adult_male_rmng_cap',
+	total: 'tot_male_cap',
 	label: 'Men',
-	color: '#BFE7F5'
+	color: '#007CA6'
 }, {
 	key: 'adult_fmale_rmng_cap',
+	total: 'tot_fmale_cap',
 	label: 'Women',
-	color: '#F2D8EC'
+	color: '#A10038',
 }, {
 	key: 'children_rmng_cap',
+	total: 'tot_child_cap',
 	label: 'Children',
-	color: '#F2F2D8'
+	color: '#757302'
 }, {
 	key: 'abused_rmng_cap',
+	total: 'tot_abused_cap',
 	label: 'Abuse Victims',
-	color: '#D8F2E5'
+	color: '#75025E'
 }];
+
+const filters = [{
+	value: 'Saint Louis City'
+}, {
+	value: 'Saint Louis County'
+}, {
+	value: 'Saint Charles'
+}, {
+	value: 'All'
+}];
+
+var selectedFilter;
 
 bars.forEach(bar => {
 	var container = $('<div>').appendTo('#legend');
-	$('<div>').addClass('swatch').css({'background-color': bar.color}).appendTo(container);
 	container.append(bar.label);
+	$('<div>').addClass('swatch').css({'background-color': bar.color}).appendTo(container);
 });
 
-// var rows = JSON.parse('[{"abused_rmng_cap":0,"address":"12th & Park","adult_fmale_rmng_cap":0,"adult_male_rmng_cap":106,"agency_name":"12th & Park Shelter","children_rmng_cap":0,"county":"Saint Louis City"},{"abused_rmng_cap":0,"address":"1000 N 19th St.","adult_fmale_rmng_cap":0,"adult_male_rmng_cap":173,"agency_name":"Gateway 180","children_rmng_cap":0,"county":"Saint Louis City"},{"abused_rmng_cap":29,"address":"2750 McKelvey Rd","adult_fmale_rmng_cap":0,"adult_male_rmng_cap":0,"agency_name":"Loaves & Fishes Inc.","children_rmng_cap":0,"county":"Saint Louis County"},{"abused_rmng_cap":0,"address":"3415 Bridgeland Dr","adult_fmale_rmng_cap":0,"adult_male_rmng_cap":20,"agency_name":"Room at The Inn","children_rmng_cap":0,"county":"Saint Louis County"},{"abused_rmng_cap":0,"address":"4223 South Compton Ave","adult_fmale_rmng_cap":0,"adult_male_rmng_cap":18,"agency_name":"Our Lady\'s Inn","children_rmng_cap":0,"county":"Saint Louis City"},{"abused_rmng_cap":0,"address":"1919 South 7th St","adult_fmale_rmng_cap":30,"adult_male_rmng_cap":30,"agency_name":"Peter & Paul","children_rmng_cap":0,"county":"Saint Louis City"},{"abused_rmng_cap":0,"address":"10740 Page Ave","adult_fmale_rmng_cap":20,"adult_male_rmng_cap":20,"agency_name":"Salvation Army Family Haven","children_rmng_cap":24,"county":"Saint Louis County"},{"abused_rmng_cap":0,"address":"1447 East Grand Ave","adult_fmale_rmng_cap":0,"adult_male_rmng_cap":89,"agency_name":"Humanitri","children_rmng_cap":0,"county":"Saint Louis City"},{"abused_rmng_cap":0,"address":"800 North Tucker Blvd.","adult_fmale_rmng_cap":20,"adult_male_rmng_cap":0,"agency_name":"Saint Patrick Center- Women\'s Night","children_rmng_cap":0,"county":"Saint Louis City"}]');
+filters.forEach(filter => {
+	$('<div>').addClass('filterItem').text(filter.value).appendTo('#filters').data('filter', filter.value).on('click', function(){
+		$(this).addClass('selected').siblings().removeClass('selected');
+		selectedFilter = $(this).data('filter');
 
-var render = rows => {
+		var show = [];
+		var hide = [];
+		$('.chartContainer').each(function(){
+			if (selectedFilter == 'All' || $(this).data('filter') == selectedFilter){
+				show.push(this);
+			} else {
+				hide.push(this);
+			}
+		});
 
-	rows.forEach(row => {
+		console.log(show, hide);
+
+		if (hide.length){
+			$(hide).hide(250, function(){
+				$(show).show(250);
+			});
+		} else {
+			$(show).show(250);
+		}
+
+	});
+});
+
+var render = shelterData => {
+
+	shelterData.forEach(row => {
 		Object.keys(row).forEach(key => {
 			if (!isNaN(row[key])) row[key] = parseFloat(row[key]);
 		});
@@ -43,12 +85,16 @@ var render = rows => {
 
 	$('#stuffGoesHere').empty();
 
-	rows.forEach(row => {
+	shelterData.forEach(row => {
 
-		var container = $('<div>').addClass('chartContainer col-md-4').appendTo('#stuffGoesHere');
+		var container = $('<div>').addClass('chartContainer col-md-4').appendTo('#stuffGoesHere').data('filter', row.county);
 
 		var canvas = document.createElement('canvas');
 		container.append(canvas);
+
+		if (selectedFilter != 'All' && row.county != selectedFilter){
+			container.hide();
+		}
 
 		$('<h3>').text(row.agency_name).appendTo(container);
 
@@ -57,26 +103,31 @@ var render = rows => {
 
 		var T = canvas.getContext('2d');
 
+		T.fillStyle = lineColor;
 		T.fillRect(0, canvasHeight, canvasWidth, -gap * 2);
 		T.fillRect(0, 0, gap * 2, canvasHeight);
 
-		var xScale = (canvasWidth - bottomMargin) / bars.length;
+		// var filteredBars = bars.filter(b => row[b.total]);
+		var barWidth = (canvasWidth - bottomMargin - 2 * gap) / bars.length;
 		bars.forEach((bar, i) => {
 
 			var val = row[bar.key];
 
-			T.fillStyle = 'black';
-			T.fillRect(i * xScale + gap + bottomMargin, canvasHeight - bottomMargin - gap, xScale - 2 * gap, -val);
+			// T.fillStyle = lineColor;
+			// T.fillRect(i * barWidth + gap + bottomMargin, canvasHeight - bottomMargin - gap, barWidth - 2 * gap, -val);
 
 			if (val - 2 * borderWidth > 0){
 				T.fillStyle = bar.color;
-				T.fillRect(i * xScale + borderWidth + gap + bottomMargin, canvasHeight - bottomMargin - borderWidth - gap, xScale - 2 * borderWidth - 2 * gap, -val + 2 * borderWidth);
+				T.fillRect(i * barWidth + borderWidth + 2 * gap + bottomMargin, canvasHeight - bottomMargin - borderWidth - gap, barWidth - 2 * borderWidth - 2 * gap, -val + 2 * borderWidth);
 			}
 
-			T.fillStyle = 'black';
-			T.textAlign = 'center';
-			T.font = '14px sans-serif';
-			T.fillText(val, (i + 0.5) * xScale, canvasHeight - val - 10);
+			if (row[bar.total]){
+				T.fillStyle = lineColor;
+				T.textAlign = 'center';
+				T.font = '14px sans-serif';
+				T.fillText(val, (i + 0.5) * barWidth + bottomMargin, canvasHeight - val - 10);
+			}
+
 
 		});
 
@@ -88,12 +139,20 @@ var loop = () => {
 	$.ajax({
 		method: 'POST',
 		headers: {'Content-Type': 'application/json'},
-		url: 'http://f364295e.ngrok.io/select',
-		data: JSON.stringify({SQL: 'SELECT agency_name, address, county, abused_rmng_cap, adult_fmale_rmng_cap, adult_male_rmng_cap, children_rmng_cap FROM availability'})
+		url: 'http://f1b8272f.ngrok.io/select',
+		data: JSON.stringify({SQL: 'SELECT agency_name, address, county, abused_rmng_cap, adult_fmale_rmng_cap, adult_male_rmng_cap, children_rmng_cap, tot_abused_cap, tot_male_cap, tot_fmale_cap, tot_child_cap FROM availability'})
 	}, 'json').then(data => {
-		render(data.data);
+
+		if (!selectedFilter){
+			var firstItem = $('.filterItem').first();
+			firstItem.addClass('selected');
+			selectedFilter = firstItem.data('filter');
+		}
+	
+		render(data.data.sort((a, b) => a.agency_name < b.agency_name ? -1 : 1));
 		setTimeout(loop, 10000);
 	});
 };
+
 
 loop();

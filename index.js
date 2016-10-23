@@ -4,7 +4,7 @@ var http = require('request-promise-json');
 app.use(require('body-parser').urlencoded({extended: true}));
 
 const myUrl = 'http://84132685.ngrok.io/';
-const dataUrl = 'http://f364295e.ngrok.io/';
+const dataUrl = 'http://f1b8272f.ngrok.io/';
 const logFileName = '../log.json';
 
 var persisted = {};
