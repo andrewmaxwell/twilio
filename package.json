@@ -1,0 +1,25 @@
+{
+  "name": "twilio-client",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andrewmaxwell/twilio.git"
+  },
+  "author": "andrew.maxwell@daugherty.com",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/andrewmaxwell/twilio/issues"
+  },
+  "homepage": "https://github.com/andrewmaxwell/twilio#readme",
+  "dependencies": {
+    "body-parser": "^1.15.2",
+    "express": "^4.14.0",
+    "request-promise-json": "^1.0.4",
+    "twilio": "^2.11.0"
+  }
+}
